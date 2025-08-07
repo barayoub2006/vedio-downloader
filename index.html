@@ -57,35 +57,41 @@
                     showMessage('يرجى لصق رابط الفيديو أولاً.', 'error');
                     return;
                 }
-
-                // Show loader and disable button
-                setLoading(true);
+                
                 messageArea.innerHTML = '';
 
-                try {
-                    // Send the URL to our backend server
-                    const response = await fetch('https://vedio-downloader.onrender.com/download', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ url: url }),
-                    });
+                // --- NEW LOGIC ---
+                // Check if the URL is from YouTube
+                const isYoutubeUrl = url.includes('youtube.com') || url.includes('youtu.be');
 
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.message || 'حدث خطأ ما.');
+                if (isYoutubeUrl) {
+                    // For YouTube, we redirect the user to a reliable downloader website
+                    // This is much more stable than trying to download on our server
+                    showMessage('يتم توجيهك إلى صفحة التحميل...', 'info');
+                    try {
+                        // We use a popular trick by adding "ss" to the youtube URL
+                        const downloadUrl = url.replace('youtube.com', 'ssyoutube.com').replace('youtu.be/', 'ssyoutube.com/watch?v=');
+                        window.open(downloadUrl, '_blank');
+                    } catch (e) {
+                         showMessage('فشل في إنشاء رابط التحميل. يرجى المحاولة مرة أخرى.', 'error');
                     }
-                    
-                    // Display success message with download links
-                    displayDownloadLinks(data);
-
-                } catch (error) {
-                    showMessage(error.message, 'error');
-                } finally {
-                    // Hide loader and enable button
-                    setLoading(false);
+                } else {
+                    // For other platforms (TikTok, Instagram), we use our server
+                    setLoading(true);
+                    try {
+                        const response = await fetch('/download', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: url }),
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || 'حدث خطأ ما.');
+                        displayDownloadLinks(data);
+                    } catch (error) {
+                        showMessage(error.message, 'error');
+                    } finally {
+                        setLoading(false);
+                    }
                 }
             });
 
@@ -124,3 +130,4 @@
     </script>
 </body>
 </html>
+
