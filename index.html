@@ -60,23 +60,25 @@
                 
                 messageArea.innerHTML = '';
 
-                // --- NEW LOGIC ---
-                // Check if the URL is from YouTube
+                // --- NEW HYBRID LOGIC ---
                 const isYoutubeUrl = url.includes('youtube.com') || url.includes('youtu.be');
+                const isTiktokUrl = url.includes('tiktok.com');
 
                 if (isYoutubeUrl) {
-                    // For YouTube, we redirect the user to a reliable downloader website
-                    // This is much more stable than trying to download on our server
-                    showMessage('يتم توجيهك إلى صفحة التحميل...', 'info');
-                    try {
-                        // We use a popular trick by adding "ss" to the youtube URL
-                        const downloadUrl = url.replace('youtube.com', 'ssyoutube.com').replace('youtu.be/', 'ssyoutube.com/watch?v=');
-                        window.open(downloadUrl, '_blank');
-                    } catch (e) {
-                         showMessage('فشل في إنشاء رابط التحميل. يرجى المحاولة مرة أخرى.', 'error');
-                    }
+                    // For YouTube, redirect to a reliable downloader website
+                    showMessage('يتم توجيهك إلى صفحة تحميل يوتيوب...', 'info');
+                    const downloadUrl = url.replace('youtube.com', 'ssyoutube.com').replace('youtu.be/', 'ssyoutube.com/watch?v=');
+                    window.open(downloadUrl, '_blank');
+
+                } else if (isTiktokUrl) {
+                    // For TikTok, redirect to a specialized TikTok downloader
+                    showMessage('يتم توجيهك إلى صفحة تحميل تيك توك...', 'info');
+                    // We use ssstik.io, a popular service for this
+                    const downloadUrl = `https://ssstik.io/en?url=${encodeURIComponent(url)}`;
+                    window.open(downloadUrl, '_blank');
+
                 } else {
-                    // For other platforms (TikTok, Instagram), we use our server
+                    // For other platforms (Instagram, etc.), we use our server
                     setLoading(true);
                     try {
                         const response = await fetch('/download', {
@@ -112,6 +114,8 @@
                 messageArea.innerHTML = `<p class="${color}">${text}</p>`;
             }
 
+
+
             function displayDownloadLinks(data) {
                 messageArea.innerHTML = `
                     <div class="bg-gray-800 rounded-lg p-4 text-right">
@@ -130,4 +134,5 @@
     </script>
 </body>
 </html>
+
 
